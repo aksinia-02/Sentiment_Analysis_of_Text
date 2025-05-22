@@ -1,3 +1,8 @@
+Participants: 
+- Ivan Eremin
+- Aksinia Vorobeva
+- Igor Polovtsev
+
 # 192.151 Introduction to Deep Learning  
 **2025S**  
 ## Project 4: Sentiment Analysis of Text
