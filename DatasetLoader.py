@@ -15,6 +15,7 @@ class DatasetLoader:
         self.batch_size = batch_size
         self.vocab = None
         self.dataset = None  # датасет будет загружен отдельно
+        self.load_dataset()
 
     def load_dataset(self):
         """
