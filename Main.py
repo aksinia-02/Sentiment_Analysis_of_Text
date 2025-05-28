@@ -7,9 +7,8 @@ from SentimentRNN import SentimentRNN
 
 class Main:
     def __init__(self):
-        # Выбор устройства: GPU или CPU
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model_path = "sentiment_model.pth"
+        self.model_path = "sentiment_RNNmodel.pth"
 
         # Параметры модели
         self.vocab_size = 10000
@@ -20,13 +19,14 @@ class Main:
         self.dropout = 0.5
         self.epochs = 5
 
-    def train(self):
-        # Загрузка данных и построение словаря
-        loader = DatasetLoader(vocab_size=self.vocab_size)
-        loader.build_vocab()
-        train_loader = loader.get_data_loader(split='train')
+        # Загружаем данные и строим словарь
+        self.loader = DatasetLoader(vocab_size=self.vocab_size)
+        self.loader.load_dataset()
+        self.loader.build_vocab()
 
-        # Инициализация модели
+    def train(self):
+        train_loader = self.loader.get_data_loader(split='train')
+
         model = SentimentRNN(
             self.vocab_size,
             self.embedding_dim,
@@ -40,7 +40,6 @@ class Main:
         optimizer = optim.Adam(model.parameters())
 
         try:
-            # Режим тренировки
             model.train()
             for epoch in range(self.epochs):
                 total_loss = 0
@@ -61,12 +60,10 @@ class Main:
             print("\n⛔ Training interrupted by user.")
 
         finally:
-            # Сохраняем модель даже если обучение было прервано
             torch.save(model.state_dict(), self.model_path)
             print(f"\n💾 Model saved to {self.model_path}")
 
     def load_model(self):
-        # Восстановление модели из файла
         model = SentimentRNN(
             self.vocab_size,
             self.embedding_dim,
@@ -75,14 +72,24 @@ class Main:
             self.n_layers,
             self.dropout
         ).to(self.device)
-
         model.load_state_dict(torch.load(self.model_path))
         model.eval()
         print("✅ Model loaded successfully")
         return model
 
+    def predict(self, text):
+        model = self.load_model()
+        indices = torch.tensor([self.loader.text_pipeline(text)], dtype=torch.long).to(self.device)
+        with torch.no_grad():
+            output = model(indices)
+            pred = output.argmax(1).item()
+            label_map = {1: "positive", 0: "negative", 2: "neutral"}
+            return label_map.get(pred, "unknown")
+
 
 if __name__ == "__main__":
     main = Main()
     main.train()
-    main.load_model()
+    print(main.predict("I am so happy today!"))
+    print(main.predict("This is the worst."))
+    print(main.predict("Okay."))
