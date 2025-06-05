@@ -5,7 +5,7 @@ from DatasetLoader import DatasetLoader
 from SentimentRNN import SentimentRNN
 from tqdm import tqdm
 from sklearn.metrics import f1_score
-import os
+import matplotlib.pyplot as plt
 
 class Main:
     def __init__(self):
@@ -18,14 +18,36 @@ class Main:
         self.output_dim = 3  # pos, neg, neu
         self.n_layers = 2
         self.dropout = 0.5
-        self.epochs = 9
+        self.epochs = 6
         self.loader = DatasetLoader(vocab_size=self.vocab_size)
         self.loader.build_vocab()
 
+    def plot_metrics(self, train_losses, val_losses, val_accuracies, val_f1s):
+        """
+        Plots and saves the training/validation loss, accuracy, and F1 score over epochs.
+        """
+        epochs = range(1, self.epochs + 1)
+        plt.figure(figsize=(12, 5))
+        plt.subplot(1, 2, 1)
+        plt.plot(epochs, train_losses, label='Train Loss')
+        plt.plot(epochs, val_losses, label='Validation Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Loss over Epochs')
+        plt.legend()
+        plt.subplot(1, 2, 2)
+        plt.plot(epochs, val_accuracies, label='Validation Accuracy')
+        plt.plot(epochs, val_f1s, label='Validation F1')
+        plt.xlabel('Epoch')
+        plt.ylabel('Score')
+        plt.title('Validation Accuracy and F1 over Epochs')
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig('performance_graph.png')
+        plt.show()
+
     def train(self):
-        # Remove old model file if it exists to ensure retraining
-        if os.path.exists(self.model_path):
-            os.remove(self.model_path)
+        # Fine-tuning: load model weights if they exist, otherwise start from scratch
         train_loader = self.loader.get_data_loader(split='train')
         model = SentimentRNN(
             self.vocab_size,
@@ -37,6 +59,11 @@ class Main:
         ).to(self.device)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters())
+        # Lists to store metrics for plotting
+        train_losses = []
+        val_losses = []
+        val_accuracies = []
+        val_f1s = []
         try:
             model.train()
             for epoch in range(self.epochs):
@@ -50,15 +77,20 @@ class Main:
                     optimizer.step()
                     total_loss += loss.item()
                 avg_loss = total_loss / len(train_loader)
+                train_losses.append(avg_loss)
                 print(f"Epoch {epoch + 1}, Average Loss: {avg_loss:.4f}")
                 # Валидация после каждой эпохи
                 val_loss, val_acc, val_f1 = self.validate(model, criterion)
+                val_losses.append(val_loss)
+                val_accuracies.append(val_acc)
+                val_f1s.append(val_f1)
                 print(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_acc:.4f}, Validation F1: {val_f1:.4f}")
         except KeyboardInterrupt:
             print("\n⛔ Training interrupted by user.")
         finally:
             torch.save(model.state_dict(), self.model_path)
             print(f"\n💾 Model saved to {self.model_path}")
+            self.plot_metrics(train_losses, val_losses, val_accuracies, val_f1s)
         return model
 
     def validate(self, model, criterion):
