@@ -1,2 +1,6 @@
-/sentiment_RNNmodel.pth
+
 .ipynb_checkpoints/
+.venv/
+__pycache__/
+*.pyc
+sentiment_RNNmodel.pth

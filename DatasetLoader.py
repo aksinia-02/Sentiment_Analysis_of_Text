@@ -23,9 +23,9 @@ class DatasetLoader:
         Загружает датасет DynaSent из локальных файлов и фильтрует метки positive, negative, neutral.
         """
         data_files = {
-            "train": "/Users/ivan/Sentiment_Analysis_of_Text/dynasent-v1.1/dynasent-v1.1-round01-yelp-train.jsonl",
-            "validation": "/Users/ivan/Sentiment_Analysis_of_Text/dynasent-v1.1/dynasent-v1.1-round01-yelp-dev.jsonl",
-            "test": "/Users/ivan/Sentiment_Analysis_of_Text/dynasent-v1.1/dynasent-v1.1-round01-yelp-test.jsonl"
+            "train": "dynasent-v1.1/dynasent-v1.1-round01-yelp-train.jsonl",
+            "validation": "dynasent-v1.1/dynasent-v1.1-round01-yelp-dev.jsonl",
+            "test": "dynasent-v1.1/dynasent-v1.1-round01-yelp-test.jsonl"
         }
         self.dataset = load_dataset("json", data_files=data_files)
         self.dataset = self.dataset.filter(lambda x: x['gold_label'] in ['positive', 'negative', 'neutral'], desc="Filtering dataset")
