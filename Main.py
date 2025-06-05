@@ -18,7 +18,7 @@ class Main:
         self.output_dim = 3  # pos, neg, neu
         self.n_layers = 2
         self.dropout = 0.5
-        self.epochs = 6
+        self.epochs = 10
         self.loader = DatasetLoader(vocab_size=self.vocab_size)
         self.loader.build_vocab()
 
